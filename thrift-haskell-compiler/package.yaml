@@ -1,0 +1,41 @@
+name:                thrift-haskell-compiler
+version:             0.1.0.0
+license:             BSD3
+author:              "winterland1989"
+maintainer:          "winterland1989@gmail.com"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description: desc
+
+dependencies:
+- base >= 4.7 && < 5
+- language-thrift == 0.11.0.0
+- haskell-src-exts
+- scientific
+- filepath
+- text
+- directory
+- containers
+- casing
+- megaparsec >=5.0 && <6.0
+
+
+
+executables:
+  thrift-haskell-compiler:
+    main:                Main.hs
+    source-files: Main.hs
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N

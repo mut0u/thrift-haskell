@@ -180,15 +180,12 @@ mkImportModuleSpec prefix fp = let ps = splitDirectories (dropExtension (T.unpac
 
 compileTDef :: CompileOpt -> T.Definition a -> [H.Decl ()]
 compileTDef _ (T.ConstDefinition T.Const{..}) =
-    [   H.TypeSig () [mkName constName] (mkType constValueType)
-    ,   H.nameBind (mkName constName) (mkConstExp constValue)
+    [ H.TypeSig () [mkName constName] (mkType constValueType)
+    , H.nameBind (mkName constName) (mkConstExp constValue)
     ]
 
 compileTDef _ (T.TypeDefinition (T.TypedefType T.Typedef{..})) =
-    [   H.TypeDecl ()
-            (H.DHead () (mkCapName typedefName))
-            (mkType typedefTargetType)
-    ]
+    [ H.TypeDecl () (H.DHead () (mkCapName typedefName)) (mkType typedefTargetType)]
 compileTDef _ (T.TypeDefinition (T.EnumType T.Enum{..})) =
     [ H.DataDecl () (H.DataType ()) Nothing
         (H.DHead () (mkCapName enumName))
@@ -196,7 +193,7 @@ compileTDef _ (T.TypeDefinition (T.EnumType T.Enum{..})) =
             H.QualConDecl () Nothing Nothing
                 (H.ConDecl () (mkCapName enumDefName) [])
         )
-        (Just (H.Deriving ()
+        [H.Deriving () Nothing
             [ mkDerivingInst "Eq"
             , mkDerivingInst "Ord"
             , mkDerivingInst "Show"
@@ -206,7 +203,7 @@ compileTDef _ (T.TypeDefinition (T.EnumType T.Enum{..})) =
             , mkDerivingInst "Thrift.Typeable"
             , mkDerivingInst "Thrift.Generic"
             , mkDerivingInst "Thrift.Hashable"
-            ]))
+            ]]
     , H.InstDecl () Nothing (mkSimpleClassInst "Thrift.Thrift" (mkTypeConT enumName))
         (Just
             [ H.InsDecl () $ H.sfun (H.name "typeCode") []
@@ -252,14 +249,14 @@ compileTDef cOpt (T.TypeDefinition (T.StructType struct@T.Struct{..})) = case st
                             H.FieldDecl () [mkName $ T.concat [structName, "_", fieldName]]
                                 (mkFieldType fieldRequiredness fieldValueType)
                     ]
-                    (Just (H.Deriving ()
+                    [H.Deriving () Nothing
                         [ mkDerivingInst "Eq"
                         , mkDerivingInst "Show"
                         , mkDerivingInst "Thrift.Data"
                         , mkDerivingInst "Thrift.Typeable"
                         , mkDerivingInst "Thrift.Generic"
                         , mkDerivingInst "Thrift.Hashable"
-                        ]))
+                        ]]
             , H.InstDecl () Nothing (mkSimpleClassInst "Thrift.Thrift" (mkTypeConT structName))
                 (Just
                     [ H.InsDecl () $ H.sfun (H.name "typeCode") []
@@ -378,14 +375,14 @@ compileTDef cOpt (T.TypeDefinition (T.StructType struct@T.Struct{..})) = case st
                         H.QualConDecl () Nothing
                             Nothing (H.ConDecl () fname [mkType fieldValueType])
                     )
-                    (Just (H.Deriving ()
+                    [H.Deriving () Nothing
                         [ mkDerivingInst "Eq"
                         , mkDerivingInst "Show"
                         , mkDerivingInst "Thrift.Data"
                         , mkDerivingInst "Thrift.Typeable"
                         , mkDerivingInst "Thrift.Generic"
                         , mkDerivingInst "Thrift.Hashable"
-                        ]))
+                        ]]
             , H.InstDecl () Nothing (mkSimpleClassInst "Thrift.Thrift" (mkTypeConT structName))
                 (Just
                     [ H.InsDecl () $ H.sfun (H.name "typeCode") []
@@ -531,7 +528,7 @@ compileTDef cOpt (T.ServiceDefinition T.Service{..}) =
                             (ioTypCon $: mkTypeConT resT)
                         )
             ]
-            Nothing
+            []
     ]
 
 --------------------------------------------------------------------------------
