@@ -185,7 +185,7 @@ instance Thrift Int32 where
     defaultValue = 0
     toTValue i = TInt32 i
     fromTValue (TInt32 i) = i
-    fromTValue _         = error "bad int32"
+    fromTValue x         = error $ "bad int32| " ++ show x
 
 instance Thrift Int64 where
     typeCode = TypeCodeTagged TC_Int64
