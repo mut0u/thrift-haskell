@@ -29,11 +29,11 @@ openTransport h p = do
 -- The framed 'Transport' package message as a /frame/ : a size header and message payload.
 --
 framed :: Transport -> IO Transport
-framed (Connection src send cls _) = do
+framed (Connection src send cls opts) = do
     src' <- Streams.makeInputStream $ do
         siz <- fromIntegral . bsToWord32be <$> Streams.readExactly 4 src  -- frame size
         Just <$> Streams.readExactly siz src
-    return (Connection src' send' cls ())
+    return (Connection src' send' cls opts)
   where
     send' lbs = do
         let siz = fromIntegral $ BL.length lbs
