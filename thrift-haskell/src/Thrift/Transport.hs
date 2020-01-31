@@ -21,8 +21,8 @@ openTransport :: HostName
               -> PortNumber
               -> IO Transport
 openTransport h p = do
-    (Connection src send cls _) <- TCP.connect h p
-    return (Connection src send cls ())
+    (Connection src send cls opts) <- TCP.connect h p
+    return (Connection src send cls opts)
 
 -- | Make a /framed/ 'Transport' from other 'Transport'.
 --
@@ -52,4 +52,3 @@ framed (Connection src send cls _) = do
           (fromIntegral (s `B.unsafeIndex` 1) `shiftL` 16) .|.
           (fromIntegral (s `B.unsafeIndex` 2) `shiftL`  8) .|.
           (fromIntegral (s `B.unsafeIndex` 3) )
-

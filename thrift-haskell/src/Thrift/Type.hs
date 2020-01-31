@@ -78,6 +78,7 @@ import System.IO.Streams (InputStream, OutputStream)
 import System.IO.Streams.Binary (getFromStream)
 import System.IO.Streams.ByteString (writeLazyByteString)
 import System.IO.Unsafe (unsafePerformIO)
+import qualified Network.Socket            as N
 
 type TypeCode = Int8
 
@@ -289,7 +290,7 @@ data Protocol = Protocol
     , decodeTValue  :: Int8 -> Get TValue
     }
 
-type Transport = Connection ()
+type Transport = Connection (N.Socket, N.SockAddr)
 
 seqIdGen :: IORef Int32
 seqIdGen = unsafePerformIO (newIORef 0)
