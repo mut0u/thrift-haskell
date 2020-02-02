@@ -173,7 +173,11 @@ mkImportModuleSpec :: [String] -> Text -> ModuleSpec
 mkImportModuleSpec prefix fp = let ps = splitDirectories (dropExtension (T.unpack fp))
                                    prefix' = pascal <$> init ps
                                    name = pascal $ last ps
-                               in ModuleSpec (prefix ++ prefix') name
+                               in ModuleSpec (removeParentDir prefix prefix') name
+  where
+    removeParentDir prefix (".":xs) =  removeParentDir prefix xs
+    removeParentDir prefix ("..":xs) =  removeParentDir (init prefix) xs
+    removeParentDir prefix x =  prefix ++ x
 
 
 --------------------------------------------------------------------------------
