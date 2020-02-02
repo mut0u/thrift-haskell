@@ -18,6 +18,7 @@ import Data.Text (Text)
 import Data.List (find, foldl', intercalate)
 import Data.Char (toUpper)
 import Text.Casing (pascal, camel)
+import Data.Maybe (fromMaybe)
 
 --------------------------------------------------------------------------------
 
@@ -195,7 +196,7 @@ compileTDef _ (T.TypeDefinition (T.EnumType T.Enum{..})) =
         (H.DHead () (mkCapName enumName))
         ((`map` enumValues) $ \ T.EnumDef{..} ->
             H.QualConDecl () Nothing Nothing
-                (H.ConDecl () (mkCapName enumDefName) [])
+                (H.ConDecl () (mkCapName $ T.append enumName (T.pack . pascal . T.unpack $ enumDefName)) [])
         )
         [H.Deriving () Nothing
             [ mkDerivingInst "Eq"
@@ -215,7 +216,7 @@ compileTDef _ (T.TypeDefinition (T.EnumType T.Enum{..})) =
                     (H.metaFunction "Thrift.TypeCodeTagged" [H.var $ H.name "Thrift.TC_Int32"]))
                 Nothing
             , H.InsDecl () $ H.sfun (H.name "defaultValue") []
-                (H.UnGuardedRhs () (H.var . mkCapName . T.enumDefName . head $ enumValues))
+                (H.UnGuardedRhs () (H.var . mkCapName . T.append enumName . (T.pack . pascal . T.unpack) . T.enumDefName . head $ enumValues))
                 Nothing
             , H.InsDecl () . H.FunBind () $ (`map` enums) $ \ (n, v) ->
                 toTValueMatch
@@ -234,7 +235,7 @@ compileTDef _ (T.TypeDefinition (T.EnumType T.Enum{..})) =
             ])
     ]
   where
-    enums = zip (map (mkCapName .T.enumDefName) enumValues) enumDefValues
+    enums = zip (map (mkCapName . T.append enumName . (T.pack . pascal . T.unpack) . T.enumDefName) enumValues) enumDefValues
     enumDefValues = tail . reverse $ foldl' getValue [-1] (map T.enumDefValue enumValues)
     getValue acc@(x:xs) Nothing = (x + 1):acc
     getValue acc (Just x') = x' : acc
@@ -491,8 +492,7 @@ compileTDef cOpt (T.ServiceDefinition T.Service{..}) =
                                 ,   T.fieldSrcAnnot = functionSrcAnnot -- unused
                         }]
 
-                expFields = case functionExceptions of Nothing -> []
-                                                       Just es -> es
+                expFields = fromMaybe [] functionExceptions
 
                 resStruct = T.Struct {
                             T.structName = n `T.append` "Res"
@@ -601,6 +601,7 @@ mkConstExp (T.ConstIdentifier i _) = let is = map (pascal . T.unpack) $ T.split 
                                          i' = case is of
                                             [datatyp, constr] -> constr
                                             [imp, _, constr]  -> imp ++ "." ++ constr
+                                            [constr] -> constr
                                             _ -> error $ "bad const identifier: " ++ T.unpack i
                                      in H.var (H.name i')
 mkConstExp (T.ConstList cs _     ) = H.listE (map mkConstExp cs)
@@ -618,7 +619,7 @@ tInt32Pat :: Integer -> H.Pat ()
 tInt32Pat x = H.PApp () (unQual $ H.name "Thrift.TInt32") [H.intP x]
 
 tStructExp :: H.Exp () -> H.Exp ()
-tStructExp x =  H.App () (H.Con () . unQual $ H.name "Thrift.TStruct") x
+tStructExp =  H.App () (H.Con () . unQual $ H.name "Thrift.TStruct")
 
 tStructPat :: H.Pat () -> H.Pat ()
 tStructPat x = H.PApp () (unQual $ H.name "Thrift.TStruct") [x]
@@ -626,13 +627,13 @@ tStructPat x = H.PApp () (unQual $ H.name "Thrift.TStruct") [x]
 fromTValueFun :: H.Exp () -> H.Exp ()
 fromTValueFun x = H.metaFunction "Thrift.fromTValue" [x]
 
-fromTValueMatch :: [H.Pat ()] -> (H.Rhs ()) -> Maybe (H.Binds ()) -> H.Match ()
+fromTValueMatch :: [H.Pat ()] -> H.Rhs () -> Maybe (H.Binds ()) -> H.Match ()
 fromTValueMatch = H.Match () (H.name "fromTValue")
 
 toTValueFun :: H.Exp () -> H.Exp ()
 toTValueFun x = H.metaFunction "Thrift.toTValue" [x]
 
-toTValueMatch :: [H.Pat ()] -> (H.Rhs ()) -> Maybe (H.Binds ()) -> H.Match ()
+toTValueMatch :: [H.Pat ()] -> H.Rhs () -> Maybe (H.Binds ()) -> H.Match ()
 toTValueMatch = H.Match () (H.name "toTValue")
 
 rightCon :: H.Exp ()
