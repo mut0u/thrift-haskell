@@ -599,7 +599,7 @@ mkConstExp (T.ConstFloat d _     ) = H.Lit () (H.Frac () (realToFrac d) (show d)
 mkConstExp (T.ConstLiteral t _   ) = H.strE (T.unpack t)
 mkConstExp (T.ConstIdentifier i _) = let is = map (pascal . T.unpack) $ T.split (== '.') i
                                          i' = case is of
-                                            [datatyp, constr] -> constr
+                                            [datatyp, constr] -> if datatyp == pascal datatyp then (pascal datatyp) ++ constr else constr
                                             [imp, _, constr]  -> imp ++ "." ++ constr
                                             [constr] -> constr
                                             _ -> error $ "bad const identifier: " ++ T.unpack i
