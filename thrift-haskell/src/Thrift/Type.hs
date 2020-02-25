@@ -43,6 +43,7 @@ module Thrift.Type
   , lookupDefault
   , IM.lookup
   , request
+  , rawFuncCall
   , T.Text
   , B.ByteString
   , HM.HashMap
