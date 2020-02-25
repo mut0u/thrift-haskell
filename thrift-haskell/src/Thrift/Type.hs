@@ -331,8 +331,33 @@ request rpcName rpcOneWay Protocol{..} conn req = do
                     MT_Reply -> return (fromTValue messagePayload)
                     _ -> throwIO $ AppException
                                     AE_INVALID_MESSAGE_TYPE
-                                    ("unknown message type: " `T.append`
-                                        (T.pack $ show messageType))
+                                    ("unknown message type: " `T.append` T.pack (show messageType))
+
+            Nothing -> throwIO $ AppException AE_INTERNAL_ERROR "bad network"
+
+
+
+rawFuncCall :: T.Text  -- method name
+            -> Protocol
+            -> Transport
+            -> TValue 
+            -> IO TValue
+rawFuncCall rpcName Protocol{..} conn tValue = do
+    sid <- seqId
+    let msg = Message rpcName MT_Call sid tValue
+    send conn (runPut (encodeMessage msg))
+    do
+        res <- getFromStream (decodeMessage TC_Struct) (source conn)
+        case res of
+            Just Message{..} -> do
+                when (messageId /= sid) . throwIO $
+                    AppException AE_BAD_SEQUENCE_ID "client sequence id verify failed"
+                case messageType of
+                    MT_Exception -> throwIO (fromTValue messagePayload :: AppException)
+                    MT_Reply -> return messagePayload
+                    _ -> throwIO $ AppException
+                                    AE_INVALID_MESSAGE_TYPE
+                                    ("unknown message type: " `T.append` T.pack (show messageType))
 
             Nothing -> throwIO $ AppException AE_INTERNAL_ERROR "bad network"
 
