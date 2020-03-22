@@ -1,6 +1,6 @@
 module Thrift.Transport where
 
-import Network.BSD (HostName, PortNumber)
+import Network.Socket (HostName, PortNumber)
 import Data.Binary.Put (putInt32be)
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Unsafe as B
